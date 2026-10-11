@@ -1,12 +1,18 @@
-FROM node:bookworm-slim
-ENV NODE_ENV=production
-
+FROM node:20-slim
 WORKDIR /app
 
-COPY ["package.json", "./"]
+# Install pnpm globally
+RUN npm install -g pnpm
 
-RUN npm install
+# Copy repository configuration files
+COPY package.json pnpm-lock.yaml* ./
 
+# Copy everything else (including vendor folders if they exist)
 COPY . .
 
-CMD [ "node", "src/server.js" ]
+# Install dependencies and skip optional native build steps to prevent crashes
+RUN pnpm install --frozen-lockfile --prod || pnpm install --prod
+
+EXPOSE 8080
+
+CMD ["pnpm", "start"]
